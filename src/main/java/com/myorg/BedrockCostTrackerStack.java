@@ -25,7 +25,7 @@ public class BedrockCostTrackerStack extends Stack {
     public BedrockCostTrackerStack(final Construct scope, final String id, final StackProps props) {
         super(scope, id, props);
 
-        // 1. DynamoDB table to store every Bedrock call
+        // DynamoDB table to store every Bedrock call
         // requestId is the partition key - every call gets a unique ID
         Table costTable = Table.Builder.create(this, "BedrockCostTable")
                 .tableName("bedrock-cost-logs")
@@ -36,7 +36,7 @@ public class BedrockCostTrackerStack extends Stack {
                 .billingMode(BillingMode.PAY_PER_REQUEST) // no capacity planning needed
                 .build();
 
-        // 2. Lambda function - points to our compiled jar
+        // Lambda function - points to our compiled jar
         Function bedrockHandler = Function.Builder.create(this, "BedrockHandler")
                 .functionName("bedrock-cost-tracker")
                 .runtime(Runtime.JAVA_21)
@@ -48,13 +48,16 @@ public class BedrockCostTrackerStack extends Stack {
                         "TABLE_NAME", costTable.getTableName()))
                 .build();
 
-        // 3. Give Lambda permission to call Bedrock
+        // Give Lambda permission to call Bedrock
         bedrockHandler.addToRolePolicy(PolicyStatement.Builder.create()
-                .actions(List.of("bedrock:InvokeModel"))
+                .actions(List.of(
+                        "bedrock:InvokeModel",
+                        "aws-marketplace:ViewSubscriptions",
+                        "aws-marketplace:Subscribe"))
                 .resources(List.of("*"))
                 .build());
 
-        // 4. Give Lambda permission to write to DynamoDB
+        // Give Lambda permission to write to DynamoDB
         costTable.grantWriteData(bedrockHandler);
     }
 }
