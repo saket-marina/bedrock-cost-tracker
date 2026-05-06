@@ -9,11 +9,9 @@ A serverless AWS application that tracks the cost of every Amazon Bedrock (Claud
 
 ## Architecture
 
-HTTP Request → Lambda (Java 21)
-↓
-Bedrock (Claude Haiku)
-↓
-DynamoDB (cost logs)
+HTTP Request -> Lambda (Java 21)
+
+HTTP Request -> Bedrock (Claude Haiku) -> DynamoDB (cost logs)
 
 ## Stack
 - **Language:** Java 21
