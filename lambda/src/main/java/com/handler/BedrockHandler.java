@@ -48,8 +48,8 @@ public class BedrockHandler implements RequestHandler<Map<String, String>, Strin
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("anthropic_version", "bedrock-2023-05-31");
             requestBody.put("max_tokens", 500);
-            requestBody.put("messages", new Object[]{
-                Map.of("role", "user", "content", prompt)
+            requestBody.put("messages", new Object[] {
+                    Map.of("role", "user", "content", prompt)
             });
 
             String requestJson = mapper.writeValueAsString(requestBody);
@@ -58,24 +58,21 @@ public class BedrockHandler implements RequestHandler<Map<String, String>, Strin
             long startTime = System.currentTimeMillis();
 
             InvokeModelResponse response = bedrockClient.invokeModel(
-                InvokeModelRequest.builder()
-                    .modelId("anthropic.claude-3-haiku-20240307-v1:0")
-                    .contentType("application/json")
-                    .body(SdkBytes.fromUtf8String(requestJson))
-                    .build()
-            );
+                    InvokeModelRequest.builder()
+                            .modelId("us.anthropic.claude-haiku-4-5-20251001-v1:0")
+                            .contentType("application/json")
+                            .body(SdkBytes.fromUtf8String(requestJson))
+                            .build());
 
             long latencyMs = System.currentTimeMillis() - startTime;
 
             // 4. Parse the response
             Map<String, Object> responseBody = mapper.readValue(
-                response.body().asUtf8String(), Map.class
-            );
+                    response.body().asUtf8String(), Map.class);
 
             // Extract the actual text response
-            String responseText = (String) ((Map<String, Object>)
-                ((java.util.List<?>) responseBody.get("content")).get(0)
-            ).get("text");
+            String responseText = (String) ((Map<String, Object>) ((java.util.List<?>) responseBody.get("content"))
+                    .get(0)).get("text");
 
             // Extract token usage from response
             Map<String, Object> usage = (Map<String, Object>) responseBody.get("usage");
@@ -83,9 +80,9 @@ public class BedrockHandler implements RequestHandler<Map<String, String>, Strin
             int outputTokens = (int) usage.get("output_tokens");
 
             // 5. Calculate cost (Claude Haiku pricing: $1/$5 per million tokens)
-            double inputCost  = (inputTokens  / 1_000_000.0) * 1.00;
+            double inputCost = (inputTokens / 1_000_000.0) * 1.00;
             double outputCost = (outputTokens / 1_000_000.0) * 5.00;
-            double totalCost  = inputCost + outputCost;
+            double totalCost = inputCost + outputCost;
 
             // 6. Log to DynamoDB
             logToDynamo(prompt, responseText, inputTokens, outputTokens, totalCost, latencyMs);
@@ -99,20 +96,20 @@ public class BedrockHandler implements RequestHandler<Map<String, String>, Strin
     }
 
     private void logToDynamo(String prompt, String response, int inputTokens,
-                              int outputTokens, double totalCost, long latencyMs) {
+            int outputTokens, double totalCost, long latencyMs) {
         Map<String, AttributeValue> item = new HashMap<>();
 
         // Each call gets a unique ID + timestamp
-        item.put("requestId",    AttributeValue.fromS(UUID.randomUUID().toString()));
-        item.put("timestamp",    AttributeValue.fromS(Instant.now().toString()));
-        item.put("model",        AttributeValue.fromS("claude-3-haiku"));
-        item.put("prompt",       AttributeValue.fromS(prompt));
-        item.put("response",     AttributeValue.fromS(response));
-        item.put("inputTokens",  AttributeValue.fromN(String.valueOf(inputTokens)));
+        item.put("requestId", AttributeValue.fromS(UUID.randomUUID().toString()));
+        item.put("timestamp", AttributeValue.fromS(Instant.now().toString()));
+        item.put("model", AttributeValue.fromS("claude-4.5-haiku"));
+        item.put("prompt", AttributeValue.fromS(prompt));
+        item.put("response", AttributeValue.fromS(response));
+        item.put("inputTokens", AttributeValue.fromN(String.valueOf(inputTokens)));
         item.put("outputTokens", AttributeValue.fromN(String.valueOf(outputTokens)));
         item.put("totalCostUsd", AttributeValue.fromN(String.format("%.8f", totalCost)));
-        item.put("latencyMs",    AttributeValue.fromN(String.valueOf(latencyMs)));
-        item.put("cacheHit",     AttributeValue.fromBool(false)); // we'll use this in project 2
+        item.put("latencyMs", AttributeValue.fromN(String.valueOf(latencyMs)));
+        item.put("cacheHit", AttributeValue.fromBool(false)); // we'll use this in project 2
 
         dynamoClient.putItem(PutItemRequest.builder()
                 .tableName(TABLE_NAME)

@@ -14,28 +14,21 @@
     </properties>
 
     <dependencies>
-        <!-- Lambda core -->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-lambda-java-core</artifactId>
             <version>1.2.3</version>
         </dependency>
-
-        <!-- AWS SDK v2 - Bedrock Runtime (for calling Claude) -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>bedrockruntime</artifactId>
             <version>2.25.11</version>
         </dependency>
-
-        <!-- AWS SDK v2 - DynamoDB (for logging) -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>dynamodb</artifactId>
             <version>2.25.11</version>
         </dependency>
-
-        <!-- JSON parsing -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -45,7 +38,6 @@
 
     <build>
         <plugins>
-            <!-- Packages everything into a single fat jar for Lambda -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
