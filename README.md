@@ -1,18 +1,54 @@
-# Welcome to your CDK Java project!
+# Bedrock Cost Tracker
 
-This is a blank project for CDK development with Java.
+A serverless AWS application that tracks the cost of every Amazon Bedrock (Claude) API call in real time.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## What it does
+- Accepts a prompt via Lambda invocation
+- Calls Claude Haiku via Amazon Bedrock
+- Logs token usage, cost, and latency to DynamoDB for every request
 
-It is a [Maven](https://maven.apache.org/) based project, so you can open this project with any Maven compatible Java IDE to build and run tests.
+## Architecture
 
-## Useful commands
+HTTP Request → Lambda (Java 21)
+↓
+Bedrock (Claude Haiku)
+↓
+DynamoDB (cost logs)
 
- * `mvn package`     compile and run tests
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
+## Stack
+- **Language:** Java 21
+- **Infrastructure:** AWS CDK
+- **Services:** Lambda, Bedrock, DynamoDB
 
-Enjoy!
+## Setup
+1. Install prerequisites: Java 21, Maven, AWS CLI, AWS CDK
+2. Configure AWS credentials: `aws configure`
+3. Build the Lambda jar:
+```bash
+cd lambda && mvn clean package -q
+cp target/bedrock-cost-tracker-lambda-1.0-SNAPSHOT.jar target/bedrock-cost-tracker-lambda-1.0-SNAPSHOT-shaded.jar
+cd ..
+```
+4. Deploy:
+```bash
+cdk bootstrap
+cdk deploy
+```
+
+## Testing
+```bash
+aws lambda invoke \
+  --function-name bedrock-cost-tracker \
+  --payload '{"prompt": "Your prompt here"}' \
+  --cli-binary-format raw-in-base64-out \
+  output.json && cat output.json
+```
+
+## Viewing logs
+```bash
+aws dynamodb scan --table-name bedrock-cost-logs
+```
+
+## Next steps
+- Prompt caching to reduce costs by up to 90% on repeated inputs
+- Athena queries for cost analysis across many requests
